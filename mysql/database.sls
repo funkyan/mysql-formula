@@ -1,5 +1,5 @@
 {% from "mysql/defaults.yaml" import rawmap with context %}
-{%- set mysql = salt['grains.filter_by'](rawmap, grain='os', merge=salt['pillar.get']('mysql:server:lookup')) %}
+{%- set mysql = salt['grains.filter_by'](rawmap, grain='os', merge=salt['pillar.get']('mysql:lookup')) %}
 
 {% set mysql_root_pass = salt['pillar.get']('mysql:server:root_password', salt['grains.get']('server_id')) %}
 {% set db_states = [] %}
@@ -24,6 +24,10 @@ include:
   file.managed:
     - name: /etc/mysql/{{ database }}.schema
     - source: {{ salt['pillar.get'](['mysql', 'schema', database, 'source']|join(':')) }}
+{%- set template_type = salt['pillar.get'](['mysql', 'schema', database, 'template']|join(':'), False) %}
+{%- if template_type %}
+    - template: {{ template_type }}
+{% endif %}
     - user: {{ salt['pillar.get']('mysql:server:user', 'mysql') }}
     - makedirs: True
 
